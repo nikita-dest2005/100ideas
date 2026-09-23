@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SciCollab — найди соавтора для научного проекта</title>
+  <style>
+    /* ==== Пресеты тем ==== */
+    :root,
+    [data-theme="light"] {
+      --bg: #ffffff;
+      --bg-alt: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --header-bg: rgba(255, 255, 255, 0.85);
+      --primary: #1e3a8a;
+      --primary-hover: #172554;
+      --primary-soft: rgba(30, 58, 138, 0.08);
+      --accent: #14b8a6;
+      --accent-hover: #0f766e;
+      --accent-soft: rgba(20, 184, 166, 0.12);
+      --accent-text: #0f766e;
+      --hero-gradient: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 50%, #ecfeff 100%);
+      --cta-bg: #0f172a;
+      --cta-text: #ffffff;
+      --shadow-color: rgba(15, 23, 42, 0.08);
+      --shadow-strong: rgba(15, 23, 42, 0.25);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --bg-alt: #0f172a;
+      --surface: #1e293b;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: #1e293b;
+      --header-bg: rgba(11, 18, 32, 0.85);
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --primary-soft: rgba(59, 130, 246, 0.15);
+      --accent: #14b8a6;
+      --accent-hover: #2dd4bf;
+      --accent-soft: rgba(20, 184, 166, 0.18);
+      --accent-text: #5eead4;
+      --hero-gradient: linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #0d1f22 100%);
+      --cta-bg: #1e293b;
+      --cta-text: #f8fafc;
+      --shadow-color: rgba(0, 0, 0, 0.4);
+      --shadow-strong: rgba(0, 0, 0, 0.5);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Плавная смена цветов после загрузки */
+    body.theme-ready * {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+    body.theme-ready .btn,
+    body.theme-ready .feature-card,
+    body.theme-ready .audience-card,
+    body.theme-ready .theme-toggle {
+      transition: all 0.2s ease;
+    }
+
+    /* ==== Хедер ==== */
+    header {
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 15px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+    /* ==== Кнопки ==== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px var(--shadow-strong);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn-outline:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #ffffff;
+    }
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px var(--shadow-strong);
+    }
+
+    /* ==== Hero ==== */
+    .hero {
+      padding: 96px 0 80px;
+      background: var(--hero-gradient);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      max-width: 720px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent-text);
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .hero h1 span { color: var(--primary); }
+
+    .hero p {
+      font-size: 20px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      max-width: 600px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    .stat-item strong {
+      display: block;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+    .stat-item span {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ==== Секции ==== */
+    section { padding: 80px 0; }
+
+    .section-title {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 56px;
+    }
+    .section-title h2 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .section-title p {
+      font-size: 18px;
+      color: var(--text-muted);
+    }
+
+    /* ==== Проблема ==== */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .problem-card {
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 32px 28px;
+      border: 1px solid var(--border);
+    }
+    .problem-card .icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .problem-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .problem-card p {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* ==== Как это работает ==== */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+    }
+    .step { text-align: center; }
+    .step-number {
+      width: 56px;
+      height: 56px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 auto 20px;
+    }
+    .step h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .step p {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* ==== Возможности ==== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      transition: all 0.25s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px var(--shadow-color);
+      border-color: var(--primary);
+    }
+    .feature-card .icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-soft);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .feature-card p {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* ==== Для кого ==== */
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+    .audience-card {
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 36px 28px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    }
+    .audience-card:nth-child(2) { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
+    .audience-card:nth-child(3) { background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); }
+    .audience-card:nth-child(4) { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+    .audience-card .icon { font-size: 36px; margin-bottom: 16px; display: block; }
+    .audience-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .audience-card p { font-size: 14px; opacity: 0.9; }
+
+    /* ==== CTA ==== */
+    .cta-section {
+      background: var(--cta-bg);
+      border-radius: 24px;
+      padding: 72px 48px;
+      text-align: center;
+      color: var(--cta-text);
+      margin: 0 24px;
+    }
+    .cta-section h2 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+    .cta-section p {
+      font-size: 18px;
+      opacity: 0.8;
+      margin-bottom: 36px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ==== Футер ==== */
+    footer {
+      background: var(--bg-alt);
+      padding: 48px 0 32px;
+      margin-top: 80px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--primary); }
+    .footer-copy { color: var(--text-muted); font-size: 14px; }
+
+    /* ==== Свитчер тем ==== */
+    .theme-switcher {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+    }
+
+    .theme-toggle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px var(--shadow-strong);
+      transition: all 0.2s ease;
+    }
+    .theme-toggle:hover {
+      background: var(--primary-hover);
+      transform: scale(1.05);
+    }
+
+    .theme-panel {
+      position: absolute;
+      bottom: 72px;
+      right: 0;
+      width: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 50px var(--shadow-strong);
+      display: none;
+    }
+    .theme-panel.open { display: block; }
+
+    .theme-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .theme-panel-header strong {
+      font-size: 15px;
+      color: var(--text);
+    }
+    .theme-panel-header button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .theme-panel-header button:hover {
+      background: var(--primary-soft);
+      color: var(--text);
+    }
+
+    .theme-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .theme-option {
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .theme-option:hover {
+      border-color: var(--primary);
+    }
+    .theme-option.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .custom-colors {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .custom-colors.visible { display: grid; }
+
+    .custom-colors label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .custom-colors input[type="color"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .custom-colors input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    .custom-colors input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 6px;
+    }
+
+    /* ==== Адаптив ==== */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 17px; }
+      .hero-stats { gap: 28px; }
+      .section-title h2 { font-size: 30px; }
+      .cta-section { padding: 48px 24px; }
+      .cta-section h2 { font-size: 28px; }
+      .footer-content { flex-direction: column; text-align: center; }
+      .theme-switcher { bottom: 16px; right: 16px; }
+      .theme-panel { width: calc(100vw - 32px); right: -8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Хедер -->
+  <header>
+    <div class="container nav">
+      <div class="logo">Sci<span>Collab</span></div>
+      <ul class="nav-links">
+        <li><a href="#how">Как это работает</a></li>
+        <li><a href="#features">Возможности</a></li>
+        <li><a href="#audience">Для кого</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="#" class="btn btn-outline">Войти</a>
+        <a href="#" class="btn btn-primary">Создать профиль</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge">Платформа для студентов-исследователей</div>
+        <h1>Найди соавтора для <span>научного проекта</span></h1>
+        <p>Объединяем студентов по научным интересам, компетенциям и целям. От идеи до совместной публикации — в одном пространстве.</p>
+        <div class="hero-buttons">
+          <a href="#" class="btn btn-primary">Создать профиль</a>
+          <a href="#how" class="btn btn-outline">Как это работает</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item"><strong>2 000+</strong><span>студентов-исследователей</span></div>
+          <div class="stat-item"><strong>300+</strong><span>совместных проектов</span></div>
+          <div class="stat-item"><strong>50+</strong><span>вузов-партнёров</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Проблема -->
+  <section>
+    <div class="container">
+      <div class="section-title">
+        <h2>Научные идеи часто остаются в одиночестве</h2>
+        <p>Мы решаем проблему разрозненности студенческих исследований и помогаем найти единомышленников.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <span class="icon">🔍</span>
+          <h3>Сложно найти соавтора</h3>
+          <p>Вне своей кафедры студенты не знают, кто занимается похожей темой и готов к коллаборации.</p>
+        </div>
+        <div class="problem-card">
+          <span class="icon">🧩</span>
+          <h3>Не хватает компетенций</h3>
+          <p>Междисциплинарные проекты требуют навыков из разных областей, но найти такого партнёра трудно.</p>
+        </div>
+        <div class="problem-card">
+          <span class="icon">📉</span>
+          <h3>Теряется мотивация</h3>
+          <p>Без поддержки и обратной связи исследовательский интерес угасает, а проект остаётся на стадии идеи.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Как это работает -->
+  <section id="how" style="background: var(--bg-alt);">
+    <div class="container">
+      <div class="section-title">
+        <h2>Как это работает</h2>
+        <p>Четыре шага от регистрации до совместной публикации.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Заполни профиль</h3>
+          <p>Укажи научные интересы, навыки, публикации и проекты, в которых хочешь участвовать.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Получи подборку</h3>
+          <p>Алгоритм предложит студентов с совпадающими интересами и дополнительными компетенциями.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Свяжись и обсуди</h3>
+          <p>Используй чат, видеозвонки и совместные документы, чтобы сформулировать общую гипотезу.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <h3>Работайте над проектом</h3>
+          <p>Ведите исследование, делите задачи и готовьте статью вместе — платформа поможет не потерять темп.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Возможности -->
+  <section id="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>Возможности платформы</h2>
+        <p>Всё необходимое для поиска соавторов и совместной научной работы.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon">🎯</div>
+          <h3>Умный подбор соавторов</h3>
+          <p>Алгоритм анализирует интересы, компетенции и цели, предлагая наиболее совместимых партнёров.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📋</div>
+          <h3>Профиль компетенций</h3>
+          <p>Наглядно покажите, что вы умеете: методы, инструменты, языки, опыт публикаций.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📌</div>
+          <h3>Доска проектов</h3>
+          <p>Публикуйте идеи и находите тех, кто готов присоединиться к вашему исследованию.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">💬</div>
+          <h3>Совместная работа</h3>
+          <p>Чат, видеозвонки и общие документы — всё для эффективной командной работы.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📚</div>
+          <h3>База публикаций</h3>
+          <p>Собирайте ссылки на статьи, отмечайте прочитанное и делитесь подборками с соавторами.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🧑‍🏫</div>
+          <h3>Наставники и эксперты</h3>
+          <p>Получайте обратную связь от более опытных исследователей и преподавателей.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Для кого -->
+  <section id="audience" style="background: var(--bg-alt);">
+    <div class="container">
+      <div class="section-title">
+        <h2>Для кого эта платформа</h2>
+        <p>Мы помогаем исследователям на разных этапах пути.</p>
+      </div>
+      <div class="audience-grid">
+        <div class="audience-card">
+          <span class="icon">🎓</span>
+          <h3>Бакалавры</h3>
+          <p>Первые научные проекты, курсовые и участие в конференциях.</p>
+        </div>
+        <div class="audience-card">
+          <span class="icon">📖</span>
+          <h3>Магистранты</h3>
+          <p>Междисциплинарные исследования и подготовка публикаций.</p>
+        </div>
+        <div class="audience-card">
+          <span class="icon">🔬</span>
+          <h3>Аспиранты</h3>
+          <p>Поиск соавторов для статей, грантов и диссертационных глав.</p>
+        </div>
+        <div class="audience-card">
+          <span class="icon">👥</span>
+          <h3>Научные группы</h3>
+          <p>Расширение команды и привлечение студентов с нужными навыками.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <div class="container">
+      <div class="cta-section">
+        <h2>Готовы найти соавтора?</h2>
+        <p>Создайте профиль, расскажите о своих научных интересах и получите первые рекомендации уже сегодня.</p>
+        <a href="#" class="btn btn-accent">Создать профиль бесплатно</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Футер -->
+  <footer>
+    <div class="container footer-content">
+      <div class="logo">Sci<span>Collab</span></div>
+      <ul class="footer-links">
+        <li><a href="#">О проекте</a></li>
+        <li><a href="#">Контакты</a></li>
+        <li><a href="#">Конфиденциальность</a></li>
+        <li><a href="#">Telegram</a></li>
+      </ul>
+      <div class="footer-copy">© 2025 SciCollab. Все права защищены.</div>
+    </div>
+  </footer>
+
+  <!-- Свитчер тем -->
+  <div class="theme-switcher">
+    <div class="theme-panel" id="themePanel">
+      <div class="theme-panel-header">
+        <strong>Тема оформления</strong>
+        <button id="themeClose" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="theme-options">
+        <button class="theme-option" data-theme="light">☀️ Светлая</button>
+        <button class="theme-option" data-theme="dark">🌙 Тёмная</button>
+        <button class="theme-option" data-theme="custom">🎨 Своя</button>
+      </div>
+      <div class="custom-colors" id="customColors">
+        <label>Фон<input type="color" id="c-bg" value="#ffffff"></label>
+        <label>Текст<input type="color" id="c-text" value="#0f172a"></label>
+        <label>Основной<input type="color" id="c-primary" value="#1e3a8a"></label>
+        <label>Акцент<input type="color" id="c-accent" value="#14b8a6"></label>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Настройки темы">🎨</button>
+  </div>
+
+  <script>
+    /* ============================================================
+       Свитчер тем: светлая / тёмная / кастомная
+       ============================================================ */
+    const root = document.documentElement;
+
+    const PRESETS = {
+      light: {
+        '--bg': '#ffffff',
+        '--bg-alt': '#f8fafc',
+        '--surface': '#ffffff',
+        '--text': '#0f172a',
+        '--text-muted': '#64748b',
+        '--border': '#e2e8f0',
+        '--header-bg': 'rgba(255, 255, 255, 0.85)',
+        '--primary': '#1e3a8a',
+        '--primary-hover': '#172554',
+        '--primary-soft': 'rgba(30, 58, 138, 0.08)',
+        '--accent': '#14b8a6',
+        '--accent-hover': '#0f766e',
+        '--accent-soft': 'rgba(20, 184, 166, 0.12)',
+        '--accent-text': '#0f766e',
+        '--hero-gradient': 'linear-gradient(135deg, #f0f9ff 0%, #f8fafc 50%, #ecfeff 100%)',
+        '--cta-bg': '#0f172a',
+        '--cta-text': '#ffffff',
+        '--shadow-color': 'rgba(15, 23, 42, 0.08)',
+        '--shadow-strong': 'rgba(15, 23, 42, 0.25)'
+      },
+      dark: {
+        '--bg': '#0b1220',
+        '--bg-alt': '#0f172a',
+        '--surface': '#1e293b',
+        '--text': '#e2e8f0',
+        '--text-muted': '#94a3b8',
+        '--border': '#1e293b',
+        '--header-bg': 'rgba(11, 18, 32, 0.85)',
+        '--primary': '#3b82f6',
+        '--primary-hover': '#60a5fa',
+        '--primary-soft': 'rgba(59, 130, 246, 0.15)',
+        '--accent': '#14b8a6',
+        '--accent-hover': '#2dd4bf',
+        '--accent-soft': 'rgba(20, 184, 166, 0.18)',
+        '--accent-text': '#5eead4',
+        '--hero-gradient': 'linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #0d1f22 100%)',
+        '--cta-bg': '#1e293b',
+        '--cta-text': '#f8fafc',
+        '--shadow-color': 'rgba(0, 0, 0, 0.4)',
+        '--shadow-strong': 'rgba(0, 0, 0, 0.5)'
+      }
+    };
+
+    /* ---- Хелперы для работы с цветом ---- */
+    function hexToRgb(hex) {
+      const h = hex.replace('#', '');
+      const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+      return [
+        parseInt(full.slice(0, 2), 16),
+        parseInt(full.slice(2, 4), 16),
+        parseInt(full.slice(4, 6), 16)
+      ];
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b]
+        .map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function mix(hexA, hexB, t) {
+      const [r1, g1, b1] = hexToRgb(hexA);
+      const [r2, g2, b2] = hexToRgb(hexB);
+      return rgbToHex(r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t);
+    }
+
+    function hexToRgba(hex, alpha) {
+      const [r, g, b] = hexToRgb(hex);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function luminance(hex) {
+      const [r, g, b] = hexToRgb(hex);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    }
+
+    /* ---- Применение пресета ---- */
+    function applyPreset(name) {
+      const vars = PRESETS[name];
+      if (!vars) return;
+      Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+      root.setAttribute('data-theme', name);
+    }
+
+    /* ---- Применение кастомной темы ---- */
+    function applyCustom(custom) {
+      const { bg, text, primary, accent } = custom;
+      const isDark = luminance(bg) < 0.5;
+
+      const vars = {
+        '--bg': bg,
+        '--bg-alt': isDark ? mix(bg, '#ffffff', 0.05) : mix(bg, '#000000', 0.03),
+        '--surface': isDark ? mix(bg, '#ffffff', 0.08) : '#ffffff',
+        '--text': text,
+        '--text-muted': mix(text, bg, 0.5),
+        '--border': isDark ? mix(bg, '#ffffff', 0.14) : mix(bg, '#000000', 0.12),
+        '--header-bg': hexToRgba(bg, 0.85),
+        '--primary': primary,
+        '--primary-hover': isDark ? mix(primary, '#ffffff', 0.2) : mix(primary, '#000000', 0.2),
+        '--primary-soft': hexToRgba(primary, isDark ? 0.18 : 0.1),
+        '--accent': accent,
+        '--accent-hover': isDark ? mix(accent, '#ffffff', 0.2) : mix(accent, '#000000', 0.2),
+        '--accent-soft': hexToRgba(accent, isDark ? 0.2 : 0.12),
+        '--accent-text': isDark ? mix(accent, '#ffffff', 0.45) : mix(accent, '#000000', 0.35),
+        '--hero-gradient': `linear-gradient(135deg, ${hexToRgba(primary, 0.08)} 0%, ${bg} 50%, ${hexToRgba(accent, 0.08)} 100%)`,
+        '--cta-bg': isDark ? mix(bg, '#ffffff', 0.1) : mix(bg, '#000000', 0.9),
+        '--cta-text': '#ffffff',
+        '--shadow-color': isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(15, 23, 42, 0.08)',
+        '--shadow-strong': isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(15, 23, 42, 0.25)'
+      };
+      Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+      root.setAttribute('data-theme', 'custom');
+    }
+
+    /* ---- Сохранение / чтение из localStorage ---- */
+    const STORAGE_KEY = 'scicollab-theme';
+    const CUSTOM_KEY = 'scicollab-custom-colors';
+
+    function saveTheme(name) {
+      localStorage.setItem(STORAGE_KEY, name);
+    }
+    function saveCustomColors(colors) {
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(colors));
+    }
+    function loadCustomColors() {
+      try {
+        const raw = localStorage.getItem(CUSTOM_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return { bg: '#ffffff', text: '#0f172a', primary: '#1e3a8a', accent: '#14b8a6' };
+    }
+
+    /* ---- UI ---- */
+    const panel = document.getElementById('themePanel');
+    const toggle = document.getElementById('themeToggle');
+    const closeBtn = document.getElementById('themeClose');
+    const optionButtons = document.querySelectorAll('.theme-option');
+    const customColors = document.getElementById('customColors');
+    const inputs = {
+      bg: document.getElementById('c-bg'),
+      text: document.getElementById('c-text'),
+      primary: document.getElementById('c-primary'),
+      accent: document.getElementById('c-accent')
+    };
+
+    function setActiveButton(name) {
+      optionButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === name);
+      });
+      customColors.classList.toggle('visible', name === 'custom');
+    }
+
+    function applyTheme(name) {
+      if (name === 'custom') {
+        const colors = {
+          bg: inputs.bg.value,
+          text: inputs.text.value,
+          primary: inputs.primary.value,
+          accent: inputs.accent.value
+        };
+        applyCustom(colors);
+        saveCustomColors(colors);
+      } else {
+        applyPreset(name);
+      }
+      setActiveButton(name);
+      saveTheme(name);
+    }
+
+    /* ---- Инициализация ---- */
+    function init() {
+      const savedTheme = localStorage.getItem(STORAGE_KEY) || 'light';
+      const savedColors = loadCustomColors();
+
+      // Заполняем пикеры сохранёнными цветами
+      inputs.bg.value = savedColors.bg;
+      inputs.text.value = savedColors.text;
+      inputs.primary.value = savedColors.primary;
+      inputs.accent.value = savedColors.accent;
+
+      applyTheme(savedTheme);
+
+      // Плавные переходы включаем только после первой отрисовки
+      requestAnimationFrame(() => document.body.classList.add('theme-ready'));
+    }
+
+    /* ---- Обработчики ---- */
+    toggle.addEventListener('click', () => {
+      panel.classList.toggle('open');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      panel.classList.remove('open');
+    });
+
+    optionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyTheme(btn.dataset.theme);
+      });
+    });
+
+    Object.values(inputs).forEach(input => {
+      input.addEventListener('input', () => {
+        // Если меняем цвет, автоматически переключаемся в custom
+        applyTheme('custom');
+      });
+    });
+
+    // Закрытие панели по клику вне её
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.theme-switcher')) {
+        panel.classList.remove('open');
+      }
+    });
+
+    // Запуск
+    init();
+  </script>
+
+</body>
+</html>
